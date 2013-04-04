@@ -11,18 +11,23 @@ env:
   - TOOL="clang"                # Use clang
   - TOOL="i686-w64-mingw32"     # 32bit MinGW
   - TOOL="x86_64-w64-mingw32"   # 64bit MinGW
-  - TOOL="arm-linux-gnueabihf"  # ARM hard-float (hf), linux
+#  This will always fail because lvm.c fails
+#  - TOOL="arm-linux-gnueabihf"  # ARM hard-float (hf), linux
 
-# Crosscompile builds may fail
-matrix:
-  allow_failures:
-    - env: TOOL="i686-w64-mingw32"
-    - env: TOOL="x86_64-w64-mingw32"
-    - env: TOOL="arm-linux-gnueabihf"
+# Crosscompile builds may notfail
+# matrix:
+#   allow_failures:
+#     - env: TOOL="i686-w64-mingw32"
+#     - env: TOOL="x86_64-w64-mingw32"
+#     - env: TOOL="arm-linux-gnueabihf"
 
 # Install dependencies
 install:
   - git clone git://github.com/LuaDist/Tools.git ~/_tools
+  # For testing "lub" depends on "lut"
+  - git clone git://github.com/lubyk/lut.git ~/_lut
+  - ln -sf ~/_lut/lut lut
+  - ln -sf ~/_lut/lut/init.lua lut.lua
   - ~/_tools/travis/travis install
 
 # Bootstap
@@ -31,7 +36,8 @@ before_script:
 
 # Build the module
 script:
-  - ~/_tools/travis/travis build
+  - ~/_tools/travis/travis build && (test -e ~/build/lubyk/lub/_test/bin/lua.exe || ~/build/lubyk/lub/_test/bin/lua test/all.lua)
+
 
 # Execute additional tests or commands
 after_script:
@@ -45,7 +51,7 @@ branches:
 # Notify the LuaDist Dev group if needed
 notifications:
   recipients:
-    - luadist-dev@googlegroups.com
+    - gaspard@teti.ch
   email:
     on_success: change
     on_failure: always
